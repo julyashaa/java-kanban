@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 public class Task {
     private final String title;
     private final String description;
@@ -39,12 +41,29 @@ public class Task {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Task task = (Task) obj;
-        return id == task.id;
+        return (id == task.id) &&
+                Objects.equals(title, task.title) &&
+                Objects.equals(description, task.description) &&
+                Objects.equals(status, task.status);
     }
 
     @Override
     public int hashCode(){
-        return Integer.hashCode(id);
+        int hash = 17;
+        hash = hash + id;
+        hash = hash * 31;
+        if (title != null) {
+           hash = title.hashCode();
+        }
+        hash = hash * 31;
+        if (description != null) {
+            hash = description.hashCode();
+        }
+        hash = hash * 31;
+        if (status != null) {
+            hash = status.hashCode();
+        }
+        return hash;
     }
 
     @Override
