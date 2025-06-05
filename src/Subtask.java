@@ -1,6 +1,4 @@
-import java.util.Objects;
-
-public class Subtask extends Task{
+public class Subtask extends Task {
     private final int epicId;
 
     public Subtask(String title, String description, Status status, int epicId) {
@@ -14,11 +12,7 @@ public class Subtask extends Task{
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        if (!super.equals(obj)) return false;
-        Subtask subtask = (Subtask) obj;
-        return epicId == subtask.epicId;
+        return super.equals(obj);
     }
 
     @Override

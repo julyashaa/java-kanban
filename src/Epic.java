@@ -15,7 +15,9 @@ public class Epic extends Task {
     }
 
     public void addSubtask(int id) {
+        if (id != getId()) {
         subtaskId.add(id);
+        }
     }
 
     public void removeSubtask(int id) {
@@ -28,21 +30,12 @@ public class Epic extends Task {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        if (!super.equals(obj)) return false;
-        Epic epic = (Epic) obj;
-        return Objects.equals(subtaskId, epic.subtaskId);
+        return super.equals(obj);
     }
 
     @Override
     public int hashCode() {
-        int hash = super.hashCode();
-        hash = hash * 31;
-        if (subtaskId != null) {
-            hash = hash + subtaskId.hashCode();
-        }
-        return hash;
+        return super.hashCode();
     }
 
     @Override
