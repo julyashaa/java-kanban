@@ -1,5 +1,12 @@
+package manage;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tasks.Epic;
+import tasks.Subtask;
+import tasks.Task;
+import tasks.Status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,18 +33,18 @@ public class InMemoryTaskManagerTest {
 
         assertNotNull(tasks, "Задачи не возвращаются.");
         assertEquals(1, tasks.size(), "Неверное количество задач.");
-        assertEquals(task, tasks.get(0), "Задачи не совпадают.");
+        assertEquals(task, tasks.getFirst(), "Задачи не совпадают.");
     }
 
     @Test
     public void createAndFindTasksById(){
-        Task task = new Task("Task", "Desc", Status.NEW);
+        Task task = new Task("tasks.Task", "Desc", Status.NEW);
         Task createTask = taskManager.createTask(task);
 
-        Epic epic = new Epic("Epic", "Desc");
+        Epic epic = new Epic("tasks.Epic", "Desc");
         Epic createEpic = taskManager.createEpic(epic);
 
-        Subtask subtask = new Subtask("Subtask", "Desc", Status.NEW, createEpic.getId());
+        Subtask subtask = new Subtask("tasks.Subtask", "Desc", Status.NEW, createEpic.getId());
         Subtask createSubtask = taskManager.createSubtask(subtask);
 
         assertEquals(createTask, taskManager.getTaskById(createTask.getId()));
@@ -62,18 +69,18 @@ public class InMemoryTaskManagerTest {
 
     @Test
     public void taskDoesNotChangeWhenAddedToTheManager(){
-        Task task = new Task("Task", "Desc", Status.NEW);
+        Task task = new Task("tasks.Task", "Desc", Status.NEW);
 
         Task createdTask = taskManager.createTask(task);
 
-        assertEquals("Task", createdTask.getTitle());
+        assertEquals("tasks.Task", createdTask.getTitle());
         assertEquals("Desc", createdTask.getDescription());
-        assertEquals(Status.NEW, createdTask.getStatus());
+        Assertions.assertEquals(Status.NEW, createdTask.getStatus());
     }
 
     @Test
     public void updateEpicStatus(){
-        Epic epic = taskManager.createEpic(new Epic("Epic", "Desc"));
+        Epic epic = taskManager.createEpic(new Epic("tasks.Epic", "Desc"));
         Subtask subtask1 = new Subtask("Title", "Desc", Status.NEW, epic.getId());
         Subtask subtask2 = new Subtask("Title", "Desc", Status.DONE, epic.getId());
 
@@ -82,7 +89,7 @@ public class InMemoryTaskManagerTest {
 
         Epic updatedEpic = taskManager.getEpicById(epic.getId());
 
-        assertEquals(Status.IN_PROGRESS, updatedEpic.getStatus(),
+        Assertions.assertEquals(Status.IN_PROGRESS, updatedEpic.getStatus(),
                 "Статус эпика с разными статусами подзадач должен быть IN_PROGRESS");
     }
 
@@ -97,8 +104,8 @@ public class InMemoryTaskManagerTest {
 
     @Test
     public void deleteEpicById(){
-        Epic epic = taskManager.createEpic(new Epic("Epic", "Desc"));
-        Subtask subtask = taskManager.createSubtask(new Subtask("Subtask", "Desc",
+        Epic epic = taskManager.createEpic(new Epic("tasks.Epic", "Desc"));
+        Subtask subtask = taskManager.createSubtask(new Subtask("tasks.Subtask", "Desc",
                 Status.NEW, epic.getId()));
 
         taskManager.deleteEpicById(epic.getId());

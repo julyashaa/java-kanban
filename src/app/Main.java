@@ -1,3 +1,14 @@
+package app;
+
+import manage.HistoryManager;
+import manage.InMemoryHistoryManager;
+import manage.Manager;
+import manage.TaskManager;
+import tasks.Epic;
+import tasks.Status;
+import tasks.Subtask;
+import tasks.Task;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -43,7 +54,7 @@ public class Main {
         printAllTasks(inMemoryTaskManager);
         System.out.println();
 
-        System.out.println("Проверка HistoryManager.InMemoryHistoryManager:");
+        System.out.println("Проверка manage.HistoryManager.manage.InMemoryHistoryManager:");
         HistoryManager inMemoryHistoryManager = new InMemoryHistoryManager();
         for(int i = 1; i <= 12; i++) {
             Task task = new Task("Задача " + i, "Описание " + i, Status.NEW);

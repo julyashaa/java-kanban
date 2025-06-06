@@ -1,5 +1,10 @@
+package manage;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tasks.Task;
+import tasks.Status;
 
 import java.util.List;
 
@@ -23,10 +28,10 @@ public class InMemoryHistoryManagerTest {
         List<Task> history = historyManager.getHistory();
         assertEquals(1, history.size());
 
-        Task newTask = history.get(0);
+        Task newTask = history.getFirst();
         assertEquals("History", newTask.getTitle());
         assertEquals("Desc", newTask.getDescription());
-        assertEquals(Status.NEW, newTask.getStatus());
+        Assertions.assertEquals(Status.NEW, newTask.getStatus());
         assertEquals(1, newTask.getId());
     }
 

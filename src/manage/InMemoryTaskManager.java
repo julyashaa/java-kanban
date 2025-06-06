@@ -1,3 +1,10 @@
+package manage;
+
+import tasks.Epic;
+import tasks.Subtask;
+import tasks.Task;
+import tasks.Status;
+
 import java.util.HashMap;
 import java.util.ArrayList;
 
@@ -6,19 +13,15 @@ public class InMemoryTaskManager implements TaskManager {
     private final HashMap<Integer, Epic> epics = new HashMap<>();
     private final HashMap<Integer, Subtask> subtasks = new HashMap<>();
     private int nextId = 1;
-    private final ArrayList<Task> history = new ArrayList<>();
-    private final int MAX_HISTORY_SIZE = 10;
+    private final HistoryManager history = Manager.getDefaultHistory();
 
     @Override
     public ArrayList<Task> getHistory(){
-        return new ArrayList<Task>(history);
+        return new ArrayList<>(history.getHistory());
     }
 
     private void addToHistory(Task task){
         history.add(task);
-        if (history.size() > MAX_HISTORY_SIZE) {
-            history.remove(0);
-        }
     }
 
     @Override
