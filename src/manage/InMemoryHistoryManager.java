@@ -2,27 +2,79 @@ package manage;
 
 import tasks.Task;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
-    private final LinkedList<Task> history = new LinkedList<>();
-    private static final int MAX_HISTORY_SIZE = 10;
+    private Node head;
+    private Node tail;
+    private final Map<Integer, Node> nodeMap = new HashMap<>();
 
     @Override
     public void add(Task task) {
-        Task historyTask = new Task(task.getTitle(), task.getDescription(), task.getStatus());
-        historyTask.setId(task.getId());
-        history.add(historyTask);
-        if (history.size() > MAX_HISTORY_SIZE) {
-            history.removeFirst();
+        if (task == null) {
+            return;
         }
+
+        int id = task.getId();
+        if (nodeMap.containsKey(id)) {
+            removeNode(nodeMap.get(id));
+        }
+
+        Task copy = new Task(task.getTitle(), task.getDescription(), task.getStatus());
+        copy.setId(task.getId());
+
+        linkLast(copy);
+
+        nodeMap.put(id, tail);
     }
 
     @Override
-    public List<Task> getHistory(){
-        return new ArrayList<>(history);
+    public void remove(int id) {
+        Node node = nodeMap.remove(id);
+        removeNode(node);
+    }
+
+    @Override
+    public List<Task> getHistory() {
+        List<Task> historyList = new ArrayList<>();
+        Node current = head;
+        while (current != null) {
+            historyList.add(current.getTask());
+            current = current.getNext();
+        }
+        return historyList;
+    }
+
+    public void linkLast(Task task) {
+        Node oldTail = tail;
+        Node newNode = new Node(task, oldTail, null);
+        tail = newNode;
+        if (oldTail == null) {
+            head = newNode;
+        } else {
+            oldTail.setNext(newNode);
+        }
+    }
+
+    public void removeNode(Node node) {
+        if (node == null) {
+            return;
+        }
+
+        Node prev = node.getPrev();
+        Node next = node.getNext();
+
+        if (prev == null) {
+            head = next;
+        } else {
+            prev.setNext(next);
+        }
+
+        if (next == null) {
+            tail = prev;
+        } else {
+            next.setPrev(prev);
+        }
     }
 }
