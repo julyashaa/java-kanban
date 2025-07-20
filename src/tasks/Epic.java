@@ -17,7 +17,7 @@ public class Epic extends Task {
 
     public void addSubtask(int id) {
         if (id != getId()) {
-        subtaskId.add(id);
+            subtaskId.add(id);
         }
     }
 
@@ -40,7 +40,7 @@ public class Epic extends Task {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return super.toString() + ", subtaskId=" + subtaskId;
     }
 }

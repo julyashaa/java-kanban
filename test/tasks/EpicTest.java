@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class EpicTest {
 
     @Test
-    public void tasksWithSameIdShouldBeEquals(){
+    public void tasksWithSameIdShouldBeEquals() {
         Epic epic1 = new Epic("Эпик 1", "Описание 2");
         Epic epic2 = new Epic("Эпик 2", "Описание 2");
         epic1.setId(2);

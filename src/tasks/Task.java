@@ -6,7 +6,7 @@ public class Task {
     private int id;
     private Status status;
 
-    public Task(String title, String description, Status status){
+    public Task(String title, String description, Status status) {
         this.title = title;
         this.description = description;
         this.status = status;
@@ -45,12 +45,12 @@ public class Task {
     }
 
     @Override
-    public int hashCode(){
+    public int hashCode() {
         int hash = 17;
         hash = hash + id;
         hash = hash * 31;
         if (title != null) {
-           hash = title.hashCode();
+            hash = title.hashCode();
         }
         hash = hash * 31;
         if (description != null) {
@@ -64,7 +64,7 @@ public class Task {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return id + ". " + title + " [" + status + "]";
     }
 }

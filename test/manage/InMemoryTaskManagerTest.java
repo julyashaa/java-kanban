@@ -17,7 +17,7 @@ public class InMemoryTaskManagerTest {
     private TaskManager taskManager;
 
     @BeforeEach
-    public void beforeEach(){
+    public void beforeEach() {
         taskManager = Manager.getDefault();
     }
 
@@ -37,7 +37,7 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void createAndFindTasksById(){
+    public void createAndFindTasksById() {
         Task task = new Task("tasks.Task", "Desc", Status.NEW);
         Task createTask = taskManager.createTask(task);
 
@@ -53,7 +53,7 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void notConflictBetweenGivenIdAndGeneratedId(){
+    public void notConflictBetweenGivenIdAndGeneratedId() {
         Task givenTask = new Task("Given Id", "Desc", Status.NEW);
         givenTask.setId(3);
 
@@ -68,7 +68,7 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void taskDoesNotChangeWhenAddedToTheManager(){
+    public void taskDoesNotChangeWhenAddedToTheManager() {
         Task task = new Task("tasks.Task", "Desc", Status.NEW);
 
         Task createdTask = taskManager.createTask(task);
@@ -79,7 +79,7 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void updateEpicStatus(){
+    public void updateEpicStatus() {
         Epic epic = taskManager.createEpic(new Epic("tasks.Epic", "Desc"));
         Subtask subtask1 = new Subtask("Title", "Desc", Status.NEW, epic.getId());
         Subtask subtask2 = new Subtask("Title", "Desc", Status.DONE, epic.getId());
@@ -94,7 +94,7 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void deleteTaskById(){
+    public void deleteTaskById() {
         Task task = taskManager.createTask(new Task("Title", "Desc", Status.NEW));
 
         taskManager.deleteTaskById(task.getId());
@@ -103,7 +103,7 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void deleteEpicById(){
+    public void deleteEpicById() {
         Epic epic = taskManager.createEpic(new Epic("tasks.Epic", "Desc"));
         Subtask subtask = taskManager.createSubtask(new Subtask("tasks.Subtask", "Desc",
                 Status.NEW, epic.getId()));
@@ -115,12 +115,26 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void returnAllTasks(){
+    public void returnAllTasks() {
         taskManager.createTask(new Task("Task1", "Desc1", Status.NEW));
         taskManager.createTask(new Task("Task2", "Desc2", Status.NEW));
 
         ArrayList<Task> tasks = taskManager.getAllTasks();
 
         assertEquals(2, tasks.size(), "Выводятся не все задачи");
+    }
+
+    @Test
+    public void deletedSubtaskIdsInEpic() {
+        Epic epic = taskManager.createEpic(new Epic("tasks.Epic", "Desc"));
+        Subtask subtask1 = taskManager.createSubtask(new Subtask("Title", "Desc", Status.NEW, epic.getId()));
+        Subtask subtask2 = taskManager.createSubtask(new Subtask("Title", "Desc", Status.DONE, epic.getId()));
+
+        taskManager.deleteTaskById(subtask1.getId());
+        Epic updateEpic = taskManager.getEpicById(epic.getId());
+        List<Integer> subtasksId = updateEpic.getSubtaskId();
+
+        assertFalse(subtasksId.contains(subtask1.getId()));
+        assertTrue(subtasksId.contains(subtask2.getId()));
     }
 }

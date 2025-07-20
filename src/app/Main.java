@@ -56,7 +56,7 @@ public class Main {
 
         System.out.println("Проверка manage.HistoryManager.manage.InMemoryHistoryManager:");
         HistoryManager inMemoryHistoryManager = new InMemoryHistoryManager();
-        for(int i = 1; i <= 12; i++) {
+        for (int i = 1; i <= 12; i++) {
             Task task = new Task("Задача " + i, "Описание " + i, Status.NEW);
             task.setId(i);
             inMemoryHistoryManager.add(task);
@@ -91,5 +91,3 @@ public class Main {
         }
     }
 }
-
-
