@@ -1,91 +1,32 @@
 package manage;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
 import tasks.Status;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class InMemoryTaskManagerTest {
-    private TaskManager taskManager;
+public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager>{
 
-    @BeforeEach
-    public void beforeEach() {
-        taskManager = Manager.getDefault();
-    }
-
-    @Test
-    public void addNewTask() {
-        Task task = new Task("Test addNewTask", "Test addNewTask description", Status.NEW);
-        final Task savedTask = taskManager.createTask(task);
-
-        assertNotNull(savedTask, "Задача не найдена.");
-        assertEquals(task, savedTask, "Задачи не совпадают.");
-
-        final List<Task> tasks = taskManager.getAllTasks();
-
-        assertNotNull(tasks, "Задачи не возвращаются.");
-        assertEquals(1, tasks.size(), "Неверное количество задач.");
-        assertEquals(task, tasks.getFirst(), "Задачи не совпадают.");
-    }
-
-    @Test
-    public void createAndFindTasksById() {
-        Task task = new Task("tasks.Task", "Desc", Status.NEW);
-        Task createTask = taskManager.createTask(task);
-
-        Epic epic = new Epic("tasks.Epic", "Desc");
-        Epic createEpic = taskManager.createEpic(epic);
-
-        Subtask subtask = new Subtask("tasks.Subtask", "Desc", Status.NEW, createEpic.getId());
-        Subtask createSubtask = taskManager.createSubtask(subtask);
-
-        assertEquals(createTask, taskManager.getTaskById(createTask.getId()));
-        assertEquals(createEpic, taskManager.getEpicById(createEpic.getId()));
-        assertEquals(createSubtask, taskManager.getSubtaskById(createSubtask.getId()));
-    }
-
-    @Test
-    public void notConflictBetweenGivenIdAndGeneratedId() {
-        Task givenTask = new Task("Given Id", "Desc", Status.NEW);
-        givenTask.setId(3);
-
-        taskManager.updateTask(givenTask);
-
-        Task generatedTask = taskManager.createTask(new Task("Generated Id",
-                "Desc", Status.NEW));
-
-        assertNotEquals(givenTask, generatedTask, "Id должны различаться");
-        assertEquals(givenTask, taskManager.getTaskById(3));
-        assertEquals(generatedTask, taskManager.getTaskById(generatedTask.getId()));
-    }
-
-    @Test
-    public void taskDoesNotChangeWhenAddedToTheManager() {
-        Task task = new Task("tasks.Task", "Desc", Status.NEW);
-
-        Task createdTask = taskManager.createTask(task);
-
-        assertEquals("tasks.Task", createdTask.getTitle());
-        assertEquals("Desc", createdTask.getDescription());
-        Assertions.assertEquals(Status.NEW, createdTask.getStatus());
+    @Override
+    protected InMemoryTaskManager createTaskManager() {
+        return new InMemoryTaskManager();
     }
 
     @Test
     public void updateEpicStatus() {
         Epic epic = taskManager.createEpic(new Epic("tasks.Epic", "Desc"));
-        Subtask subtask1 = new Subtask("Title", "Desc", Status.NEW, epic.getId());
-        Subtask subtask2 = new Subtask("Title", "Desc", Status.DONE, epic.getId());
-
-        taskManager.createSubtask(subtask1);
-        taskManager.createSubtask(subtask2);
+        taskManager.createSubtask(new Subtask("Title", "Desc", Status.NEW,
+                Duration.ZERO, null, epic.getId()));
+        taskManager.createSubtask(new Subtask("Title", "Desc", Status.DONE,
+                Duration.ZERO, null, epic.getId()));
 
         Epic updatedEpic = taskManager.getEpicById(epic.getId());
 
@@ -94,47 +35,84 @@ public class InMemoryTaskManagerTest {
     }
 
     @Test
-    public void deleteTaskById() {
-        Task task = taskManager.createTask(new Task("Title", "Desc", Status.NEW));
-
-        taskManager.deleteTaskById(task.getId());
-
-        assertNull(taskManager.getTaskById(task.getId()));
-    }
-
-    @Test
-    public void deleteEpicById() {
+    public void epicStatusAllNew() {
         Epic epic = taskManager.createEpic(new Epic("tasks.Epic", "Desc"));
-        Subtask subtask = taskManager.createSubtask(new Subtask("tasks.Subtask", "Desc",
-                Status.NEW, epic.getId()));
+        taskManager.createSubtask(new Subtask("Title", "Desc", Status.NEW,
+                Duration.ZERO, null, epic.getId()));
+        taskManager.createSubtask(new Subtask("Title", "Desc", Status.NEW,
+                Duration.ZERO, null, epic.getId()));
 
-        taskManager.deleteEpicById(epic.getId());
+        Epic updatedEpic = taskManager.getEpicById(epic.getId());
 
-        assertNull(taskManager.getEpicById(epic.getId()), "Эпик не был удален");
-        assertNull(taskManager.getSubtaskById(subtask.getId()), "Подзадача не была удалена");
+        Assertions.assertEquals(Status.NEW, updatedEpic.getStatus(),
+                "Все подзадачи NEW, эпик тоже должен быть NEW");
     }
 
     @Test
-    public void returnAllTasks() {
-        taskManager.createTask(new Task("Task1", "Desc1", Status.NEW));
-        taskManager.createTask(new Task("Task2", "Desc2", Status.NEW));
-
-        ArrayList<Task> tasks = taskManager.getAllTasks();
-
-        assertEquals(2, tasks.size(), "Выводятся не все задачи");
-    }
-
-    @Test
-    public void deletedSubtaskIdsInEpic() {
+    public void epicStatusAllDone() {
         Epic epic = taskManager.createEpic(new Epic("tasks.Epic", "Desc"));
-        Subtask subtask1 = taskManager.createSubtask(new Subtask("Title", "Desc", Status.NEW, epic.getId()));
-        Subtask subtask2 = taskManager.createSubtask(new Subtask("Title", "Desc", Status.DONE, epic.getId()));
+        taskManager.createSubtask(new Subtask("Title", "Desc", Status.DONE,
+                Duration.ZERO, null, epic.getId()));
+        taskManager.createSubtask(new Subtask("Title", "Desc", Status.DONE,
+                Duration.ZERO, null, epic.getId()));
 
-        taskManager.deleteTaskById(subtask1.getId());
-        Epic updateEpic = taskManager.getEpicById(epic.getId());
-        List<Integer> subtasksId = updateEpic.getSubtaskId();
+        Epic updatedEpic = taskManager.getEpicById(epic.getId());
 
-        assertFalse(subtasksId.contains(subtask1.getId()));
-        assertTrue(subtasksId.contains(subtask2.getId()));
+        Assertions.assertEquals(Status.DONE, updatedEpic.getStatus(),
+                "Все подзадачи DONE, эпик тоже должен быть DONE");
     }
-}
+
+    @Test
+    public void epicStatusAllInProgress() {
+        Epic epic = taskManager.createEpic(new Epic("tasks.Epic", "Desc"));
+        taskManager.createSubtask(new Subtask("Title", "Desc", Status.IN_PROGRESS,
+                Duration.ZERO, null, epic.getId()));
+        taskManager.createSubtask(new Subtask("Title", "Desc", Status.IN_PROGRESS,
+                Duration.ZERO, null, epic.getId()));
+
+        Epic updatedEpic = taskManager.getEpicById(epic.getId());
+
+        Assertions.assertEquals(Status.IN_PROGRESS, updatedEpic.getStatus(),
+                "Все подзадачи IN_PROGRESS, эпик тоже должен быть IN_PROGRESS");
+    }
+
+    @Test
+    public void epicDurationIsSumOfSubtasksDuration() {
+        Epic epic = taskManager.createEpic(new Epic("Эпик", "Описание"));
+
+        taskManager.createSubtask(new Subtask("Подзадача 1", "Описание 1", Status.NEW, Duration.ofMinutes(15),
+                LocalDateTime.of(2024, 1, 1, 8, 0), epic.getId()));
+        taskManager.createSubtask(new Subtask("Подзадача 2", "Описание 2", Status.NEW, Duration.ofMinutes(30),
+                LocalDateTime.of(2024, 1, 1, 9, 0), epic.getId()));
+
+        Epic updatedEpic = taskManager.getEpicById(epic.getId());
+
+        assertEquals(Duration.ofMinutes(45), updatedEpic.getDuration(), "Длительность эпика — сумма подзадач");
+        assertEquals(LocalDateTime.of(2024, 1, 1, 8, 0), updatedEpic.getStartTime(),
+                "startTime для Эпика должен быть минимальным стартом среди подзадач");
+        assertEquals(LocalDateTime.of(2024, 1, 1, 9, 30), updatedEpic.getEndTime(),
+                "endTime для Эпика должен быть максимальным концом среди подзадач");
+    }
+
+    @Test
+    public void canNotCreateOverlappingTask() {
+        taskManager.createTask(new Task("Title", "Desc", Status.NEW,
+                Duration.ofMinutes(30), LocalDateTime.of(2024, 1, 1, 10, 0)));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            taskManager.createTask(new Task("Title2", "Desc2", Status.NEW,
+                    Duration.ofMinutes(15), LocalDateTime.of(2024, 1, 1, 10, 15)));
+        });
+        assertTrue(exception.getMessage().contains("пересекается"),
+                "Должно быть исключение о пересечении");
+    }
+
+    @Test
+    public void canCreateNONOverlappingTask() {
+        taskManager.createTask(new Task("Title", "Desc", Status.NEW,
+                Duration.ofMinutes(30), LocalDateTime.of(2024, 1, 1, 10, 0)));
+        assertDoesNotThrow(() -> {
+            taskManager.createTask(new Task("Title", "Desc", Status.NEW,
+                    Duration.ofMinutes(10), LocalDateTime.of(2024, 1, 1, 12, 0)));
+        });
+    }
+    }
