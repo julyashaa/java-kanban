@@ -2,6 +2,8 @@ package tasks;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EpicTest {
@@ -41,5 +43,16 @@ public class EpicTest {
         epic.removeSubtask(1);
         assertFalse(epic.getSubtaskId().contains(1), "Подзадача должна быть удалена");
         assertEquals(1, epic.getSubtaskId().size());
+    }
+
+    @Test
+    public void epicWithoutSubtasksHasZeroDurationAndTime() {
+        Epic epic = new Epic("Эпик", "Описание");
+        epic.setId(1);
+
+        assertEquals(Duration.ZERO, epic.getDuration(),
+                "У эпика без подзадач должна быть нулевая длительность");
+        assertNull(epic.getStartTime(), "У эпика без подзадач нет startTime");
+        assertNull(epic.getEndTime(), "У эпика без подзадач нет endTime");
     }
 }
