@@ -30,6 +30,6 @@ public class Subtask extends Task {
 
     @Override
     public String toString() {
-        return super.toString() + " (epicId=" + epicId + ")";
+        return String.format("%s (epicId=%d)", super.toString(), epicId);
     }
 }

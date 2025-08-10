@@ -2,6 +2,7 @@ package tasks;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Task {
     private final String title;
@@ -92,6 +93,34 @@ public class Task {
 
     @Override
     public String toString() {
-        return id + ". " + title + " [" + status + "]" + " " + duration + " " + startTime;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+
+        Duration dr = getDuration();
+        LocalDateTime st = getStartTime();
+        LocalDateTime end = getEndTime();
+
+        String durationStr;
+        if (dr != null) {
+            durationStr = dr.toString();
+        } else {
+            durationStr = "длительность не задана";
+        }
+
+        String startTimeStr;
+        if (st != null) {
+            startTimeStr = st.format(formatter);
+        } else {
+            startTimeStr = "дата и время не заданы";
+        }
+
+        String endTimeStr;
+        if (end != null) {
+            endTimeStr = end.format(formatter);
+        } else {
+            endTimeStr = "длительность не задана";
+        }
+
+        return String.format("%d. %s [%s] %s %s - %s", id, title, status, durationStr, startTimeStr,
+                endTimeStr);
     }
 }
