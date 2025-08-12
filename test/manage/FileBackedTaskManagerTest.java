@@ -10,24 +10,34 @@ import tasks.Task;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class FileBackedTaskManagerTest {
-
+public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     private File file;
     private FileBackedTaskManager manager;
 
+    @Override
+    protected FileBackedTaskManager createTaskManager() {
+        try {
+            file = File.createTempFile("tasks", ".csv");
+            manager = new FileBackedTaskManager(file);
+            return manager;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @BeforeEach
-    void setUp() throws IOException {
-        file = File.createTempFile("tasks", ".csv");
-        manager = new FileBackedTaskManager(file);
+    void setUp() {
+        manager = createTaskManager();
     }
 
     @Test
-    void saveAndLoadEmptyFile() throws IOException {
+    void saveAndLoadEmptyFile() {
 
         manager.save();
 
@@ -41,9 +51,12 @@ public class FileBackedTaskManagerTest {
 
     @Test
     void saveMultipleTasksToFile() throws IOException {
-        manager.createTask(new Task("title1", "desc1", Status.NEW));
-        manager.createTask(new Task("title2", "desc2", Status.DONE));
-        manager.createTask(new Task("title3", "desc3", Status.IN_PROGRESS));
+        manager.createTask(new Task("title1", "desc1", Status.NEW,
+                Duration.ofMinutes(10), LocalDateTime.now()));
+        manager.createTask(new Task("title2", "desc2", Status.DONE,
+                Duration.ofMinutes(10), LocalDateTime.now().plusHours(1)));
+        manager.createTask(new Task("title3", "desc3", Status.IN_PROGRESS,
+                Duration.ofMinutes(10), LocalDateTime.now().plusHours(2)));
 
         String content = Files.readString(file.toPath());
 
@@ -64,8 +77,10 @@ public class FileBackedTaskManagerTest {
 
     @Test
     void loadMultipleTasksFromFile() {
-        manager.createTask(new Task("title1", "desc1", Status.NEW));
-        manager.createTask(new Task("title2", "desc2", Status.DONE));
+        manager.createTask(new Task("title1", "desc1", Status.NEW,
+                Duration.ofMinutes(10), LocalDateTime.now()));
+        manager.createTask(new Task("title2", "desc2", Status.DONE,
+                Duration.ofMinutes(10), LocalDateTime.now().plusHours(1)));
 
         FileBackedTaskManager loaded = FileBackedTaskManager.loadFromFile(file);
         List<Task> tasks = loaded.getAllTasks();
@@ -83,9 +98,9 @@ public class FileBackedTaskManagerTest {
     void saveAndLoadEpicWithSubtasks() {
         Epic epic = manager.createEpic(new Epic("epic1", "desc1"));
         Subtask s1 = manager.createSubtask(new Subtask("sub1", "sub desc 1", Status.NEW,
-                epic.getId()));
+                Duration.ofMinutes(10), LocalDateTime.now(), epic.getId()));
         Subtask s2 = manager.createSubtask(new Subtask("sub2", "sub desc 2", Status.DONE,
-                epic.getId()));
+                Duration.ofMinutes(10), LocalDateTime.now().plusHours(1), epic.getId()));
 
         FileBackedTaskManager loaded = FileBackedTaskManager.loadFromFile(file);
         Epic loadedEpic = loaded.getEpicById(epic.getId());
@@ -93,5 +108,13 @@ public class FileBackedTaskManagerTest {
 
         assertEquals(epic.getTitle(), loadedEpic.getTitle());
         assertEquals(2, loadedSub.size());
+    }
+
+    @Test
+    public void savEndLoadDoesNotThrowOnWalidFile() {
+        assertDoesNotThrow(() -> {
+            manager.save();
+            FileBackedTaskManager.loadFromFile(file);
+        }, "При корректной работе не должно быть исключений");
     }
 }

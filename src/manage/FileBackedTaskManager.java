@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
@@ -18,7 +20,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     public void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write("id,type,name,status,description,epic");
+            writer.write("id,type,name,status,description,duration,startTime,epic");
             writer.newLine();
 
             for (Task task : getAllTasks()) {
@@ -149,7 +151,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         sb.append(task.getTitle()).append(",");
         sb.append(task.getStatus()).append(",");
-        sb.append(task.getDescription());
+        sb.append(task.getDescription()).append(",");
+
+        long durationInMinutes = 0;
+        if (task.getDuration() != null) {
+            durationInMinutes = task.getDuration().toMinutes();
+        }
+
+        String startTimeStr = "";
+        if (task.getStartTime() != null) {
+            startTimeStr = task.getStartTime().toString();
+        }
+
+        sb.append(durationInMinutes).append(",");
+        sb.append(startTimeStr);
 
         if (task instanceof Subtask) {
             Subtask subtask = (Subtask) task;
@@ -167,19 +182,35 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Status status = Status.valueOf(values[3]);
         String desc = values[4];
 
+        Duration duration;
+        if (values[5].isEmpty()) {
+            duration = Duration.ZERO;
+        } else {
+            duration = Duration.ofMinutes(Long.parseLong(values[5]));
+        }
+
+        LocalDateTime startTime;
+        if (values[6].isEmpty()) {
+            startTime = null;
+        } else {
+            startTime = LocalDateTime.parse(values[6]);
+        }
+
         switch (type) {
             case TASK:
-                Task task = new Task(title, desc, status);
+                Task task = new Task(title, desc, status, duration, startTime);
                 task.setId(id);
                 return task;
             case EPIC:
                 Epic epic = new Epic(title, desc);
                 epic.setId(id);
                 epic.setStatus(status);
+                epic.setDuration(duration);
+                epic.setStartTime(startTime);
                 return epic;
             case SUBTASK:
-                int epicId = Integer.parseInt(values[5]);
-                Subtask subtask = new Subtask(title, desc, status, epicId);
+                int epicId = Integer.parseInt(values[7]);
+                Subtask subtask = new Subtask(title, desc, status, duration, startTime, epicId);
                 subtask.setId(id);
                 return subtask;
             default:
@@ -191,15 +222,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         File file = new File("save.csv");
         FileBackedTaskManager fileManager = new FileBackedTaskManager(file);
 
-        Task task1 = fileManager.createTask(new Task("title1", "desc1", Status.NEW));
-        Task task2 = fileManager.createTask(new Task("title2", "desc2", Status.DONE));
+        Task task1 = fileManager.createTask(new Task("title1", "desc1", Status.NEW,
+                Duration.ofMinutes(30), LocalDateTime.now()));
+        Task task2 = fileManager.createTask(new Task("title2", "desc2", Status.DONE,
+                Duration.ofMinutes(60), LocalDateTime.now().plusHours(1)));
 
         Epic epic = fileManager.createEpic(new Epic("title2", "desc2"));
 
         Subtask subtask1 = fileManager.createSubtask(new Subtask("title1", "desc1", Status.NEW,
-                epic.getId()));
+                Duration.ofMinutes(20), LocalDateTime.now().plusHours(2), epic.getId()));
         Subtask subtask2 = fileManager.createSubtask(new Subtask("title2", "desc2", Status.DONE,
-                epic.getId()));
+                Duration.ofMinutes(40), LocalDateTime.now().plusHours(3), epic.getId()));
 
         System.out.println("Исходный менеджер:");
         System.out.println("Задачи: " + fileManager.getAllTasks());

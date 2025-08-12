@@ -1,15 +1,23 @@
 package tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class Task {
     private final String title;
     private final String description;
     private int id;
     private Status status;
+    private Duration duration;
+    private LocalDateTime startTime;
 
-    public Task(String title, String description, Status status) {
+    public Task(String title, String description, Status status, Duration duration, LocalDateTime startTime) {
         this.title = title;
         this.description = description;
         this.status = status;
+        this.duration = duration;
+        this.startTime = startTime;
     }
 
     public String getTitle() {
@@ -34,6 +42,26 @@ public class Task {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return startTime.plus(duration);
     }
 
     @Override
@@ -65,6 +93,34 @@ public class Task {
 
     @Override
     public String toString() {
-        return id + ". " + title + " [" + status + "]";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+
+        Duration dr = getDuration();
+        LocalDateTime st = getStartTime();
+        LocalDateTime end = getEndTime();
+
+        String durationStr;
+        if (dr != null) {
+            durationStr = dr.toString();
+        } else {
+            durationStr = "длительность не задана";
+        }
+
+        String startTimeStr;
+        if (st != null) {
+            startTimeStr = st.format(formatter);
+        } else {
+            startTimeStr = "дата и время не заданы";
+        }
+
+        String endTimeStr;
+        if (end != null) {
+            endTimeStr = end.format(formatter);
+        } else {
+            endTimeStr = "длительность не задана";
+        }
+
+        return String.format("%d. %s [%s] %s %s - %s", id, title, status, durationStr, startTimeStr,
+                endTimeStr);
     }
 }
