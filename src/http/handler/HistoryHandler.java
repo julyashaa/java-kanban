@@ -1,8 +1,11 @@
 package http.handler;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import exceptions.NotFoundException;
+import exceptions.OverlapException;
 import manage.TaskManager;
 import tasks.Task;
 
@@ -32,6 +35,12 @@ public class HistoryHandler extends BaseHttpHandler implements HttpHandler {
 
             h.sendResponseHeaders(405, -1);
             h.close();
+        } catch (OverlapException e) {
+            sendHasOverlaps(h, e.getMessage());
+        } catch (JsonSyntaxException | IllegalArgumentException e) {
+            sendBadRequest(h, "Bad Request: " + e.getMessage());
+        } catch (NotFoundException e) {
+            sendNotFound(h, e.getMessage());
         } catch (Exception e) {
             sendError(h, "Внутренняя ошибка: " + e.getMessage());
         }

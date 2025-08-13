@@ -43,4 +43,12 @@ public class BaseHttpHandler {
         h.getResponseBody().write(resp);
         h.close();
     }
+
+    protected void sendBadRequest(HttpExchange h, String message) throws IOException {
+        byte[] resp = ("error :" + message).getBytes(StandardCharsets.UTF_8);
+        h.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
+        h.sendResponseHeaders(400, resp.length);
+        h.getResponseBody().write(resp);
+        h.close();
+    }
 }
