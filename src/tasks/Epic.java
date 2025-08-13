@@ -10,7 +10,7 @@ public class Epic extends Task {
 
     private LocalDateTime endTime;
 
-    public Epic(){
+    public Epic() {
         super();
         subtaskId = new ArrayList<>();
         setDuration(Duration.ZERO);
