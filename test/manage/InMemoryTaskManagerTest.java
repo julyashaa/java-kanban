@@ -1,5 +1,6 @@
 package manage;
 
+import exceptions.OverlapException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager>{
+public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
 
     @Override
     protected InMemoryTaskManager createTaskManager() {
@@ -98,7 +99,7 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager
     public void canNotCreateOverlappingTask() {
         taskManager.createTask(new Task("Title", "Desc", Status.NEW,
                 Duration.ofMinutes(30), LocalDateTime.of(2024, 1, 1, 10, 0)));
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        Exception exception = assertThrows(OverlapException.class, () -> {
             taskManager.createTask(new Task("Title2", "Desc2", Status.NEW,
                     Duration.ofMinutes(15), LocalDateTime.of(2024, 1, 1, 10, 15)));
         });
@@ -115,4 +116,4 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager
                     Duration.ofMinutes(10), LocalDateTime.of(2024, 1, 1, 12, 0)));
         });
     }
-    }
+}
