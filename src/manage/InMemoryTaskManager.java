@@ -1,6 +1,8 @@
 package manage;
 
 import comparator.TaskStartTimeComparator;
+import exceptions.NotFoundException;
+import exceptions.OverlapException;
 import tasks.Epic;
 import tasks.Subtask;
 import tasks.Task;
@@ -22,7 +24,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Task createTask(Task task) {
         List<Task> overlaps = findOverlaps(task);
         if (!overlaps.isEmpty()) {
-            throw new IllegalArgumentException("Время задачи пересекается с задачами: " + overlaps);
+            throw new OverlapException("Время задачи пересекается с задачами: " + overlaps);
         }
         int id = nextId++;
         task.setId(id);
@@ -40,13 +42,18 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Subtask createSubtask(Subtask subtask) {
+        Epic epic = epics.get(subtask.getEpicId());
+        if (epic == null) {
+            throw new NotFoundException("Epic с id = " + subtask.getEpicId() + "не найден");
+        }
+
         List<Task> overlaps = findOverlaps(subtask);
         if (!overlaps.isEmpty()) {
-            throw new IllegalArgumentException("Время задачи пересекается с задачами: " + overlaps);
+            throw new OverlapException("Время задачи пересекается с задачами: " + overlaps);
         }
         subtask.setId(nextId++);
         subtasks.put(subtask.getId(), subtask);
-        Epic epic = epics.get(subtask.getEpicId());
+
         epic.addSubtask(subtask.getId());
         updateEpicStatus(epic);
         updateEpicTime(epic);
@@ -56,27 +63,30 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int id) {
         Task task = tasks.get(id);
-        if (task != null) {
-            addToHistory(task);
+        if (task == null) {
+            throw new NotFoundException("Задача с id = " + id + "не найдена");
         }
+        addToHistory(task);
         return task;
     }
 
     @Override
     public Epic getEpicById(int id) {
         Epic epic = epics.get(id);
-        if (epic != null) {
-            addToHistory(epic);
+        if (epic == null) {
+            throw new NotFoundException("Epic с id = " + id + "не найден");
         }
+        addToHistory(epic);
         return epic;
     }
 
     @Override
     public Subtask getSubtaskById(int id) {
         Subtask subtask = subtasks.get(id);
-        if (subtask != null) {
-            addToHistory(subtask);
+        if (subtask == null) {
+            throw new NotFoundException("Подзадача с id = " + id + "не найдена");
         }
+        addToHistory(subtask);
         return subtask;
     }
 
@@ -99,7 +109,7 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Subtask> getSubtasksByEpicId(int epicId) {
         Epic epic = epics.get(epicId);
         if (epic == null) {
-            return new ArrayList<>();
+            throw new NotFoundException("Epic с id = " + epicId + "не найдена");
         }
 
         return epic.getSubtaskId().stream()
@@ -146,15 +156,35 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
+    public void deleteSubtaskById(int id) {
+        Subtask subtask = subtasks.remove(id);
+        if (subtask == null) {
+            throw new NotFoundException("Подзадача с id = " + id + " не найдена");
+        }
+
+        Epic epic = epics.get(subtask.getEpicId());
+        if (epic != null) {
+            epic.removeSubtask(id);
+            updateEpicStatus(epic);
+            updateEpicTime(epic);
+        }
+
+        history.remove(id);
+    }
+
+    @Override
     public void deleteEpicById(int id) {
         Epic epic = epics.remove(id);
-        if (epic != null) {
-            for (int subtaskId : epic.getSubtaskId()) {
-                subtasks.remove(subtaskId);
-                history.remove(subtaskId);
-            }
-            history.remove(id);
+        if (epic == null) {
+            throw new NotFoundException("Epic с id = " + id + " не найден");
         }
+
+        for (int subtaskId : epic.getSubtaskId()) {
+            subtasks.remove(subtaskId);
+            history.remove(subtaskId);
+        }
+        history.remove(id);
+
     }
 
     @Override
@@ -192,19 +222,32 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateTask(Task task) {
+        if (!tasks.containsKey(task.getId())) {
+            throw new NotFoundException("Задача с id = " + task.getId() + "не найдена");
+        }
         List<Task> overlaps = findOverlaps(task);
         if (!overlaps.isEmpty()) {
-            throw new IllegalArgumentException("Время задачи пересекается с задачами: " + overlaps);
+            throw new OverlapException("Время задачи пересекается с задачами: " + overlaps);
         }
         tasks.put(task.getId(), task);
     }
 
     @Override
     public void updateSubtask(Subtask subtask) {
+        if (!subtasks.containsKey(subtask.getId())) {
+            throw new NotFoundException("Подзадача с id = " + subtask.getId() + " не найдена");
+        }
+
+        Epic epic = epics.get(subtask.getEpicId());
+        if (epic == null) {
+            throw new NotFoundException("Эпик с id = " + subtask.getEpicId() + " не найден");
+        }
+
         List<Task> overlaps = findOverlaps(subtask);
         if (!overlaps.isEmpty()) {
-            throw new IllegalArgumentException("Время задачи пересекается с задачами: " + overlaps);
+            throw new OverlapException("Время задачи пересекается с задачами: " + overlaps);
         }
+
         subtasks.put(subtask.getId(), subtask);
         updateEpicStatus(epics.get(subtask.getEpicId()));
         updateEpicTime(epics.get(subtask.getEpicId()));
@@ -292,14 +335,14 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     public static boolean isOverlap(Task t1, Task t2) {
-        if (t1.getDuration() == null || t2.getDuration() == null) {
-            return false;
-        }
-
         LocalDateTime start1 = t1.getStartTime();
         LocalDateTime end1 = t1.getEndTime();
         LocalDateTime start2 = t2.getStartTime();
         LocalDateTime end2 = t2.getEndTime();
+
+        if (start1 == null || start2 == null || end1 == null || end2 == null) {
+            return false;
+        }
 
         if (end1.isEqual(start2) || end1.isBefore(start2)) return false;
         return !end2.isEqual(start1) && !end2.isBefore(start1);

@@ -5,12 +5,15 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class Task {
-    private final String title;
-    private final String description;
+    private String title;
+    private String description;
     private int id;
     private Status status;
     private Duration duration;
     private LocalDateTime startTime;
+
+    public Task() {
+    }
 
     public Task(String title, String description, Status status, Duration duration, LocalDateTime startTime) {
         this.title = title;
@@ -61,6 +64,7 @@ public class Task {
     }
 
     public LocalDateTime getEndTime() {
+        if (startTime == null || duration == null) return null;
         return startTime.plus(duration);
     }
 

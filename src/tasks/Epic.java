@@ -6,14 +6,19 @@ import java.util.ArrayList;
 
 public class Epic extends Task {
 
-    private final ArrayList<Integer> subtaskId;
-    private Duration duration = Duration.ZERO;
-    private LocalDateTime startTime;
+    private ArrayList<Integer> subtaskId = new ArrayList<>();
+
     private LocalDateTime endTime;
 
+    public Epic() {
+        super();
+        subtaskId = new ArrayList<>();
+        setDuration(Duration.ZERO);
+    }
+
     public Epic(String title, String description) {
-        super(title, description, Status.NEW, null, null);
-        this.subtaskId = new ArrayList<>();
+        super(title, description, Status.NEW, Duration.ZERO, null);
+
     }
 
     public ArrayList<Integer> getSubtaskId() {
@@ -32,26 +37,6 @@ public class Epic extends Task {
 
     public void clearSubtasks() {
         subtaskId.clear();
-    }
-
-    @Override
-    public Duration getDuration() {
-        return duration;
-    }
-
-    @Override
-    public void setDuration(Duration duration) {
-        this.duration = duration;
-    }
-
-    @Override
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
-
-    @Override
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
     }
 
     @Override

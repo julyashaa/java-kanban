@@ -1,4 +1,5 @@
 package manage;
+import exceptions.NotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,14 +47,16 @@ public abstract class TaskManagerTest<T extends TaskManager> {
                 Duration.ofMinutes(15), LocalDateTime.of(2024, 1, 1, 9, 0));
         givenTask.setId(3);
 
-        taskManager.updateTask(givenTask);
+        Task savedGiven = taskManager.createTask(givenTask);
+
+        assertNotEquals(3, savedGiven.getId(), "Менеджер должен игнорировать внешний id и генерировать свой");
 
         Task generatedTask = taskManager.createTask(new Task("Generated Id",
                 "Desc", Status.NEW, Duration.ofMinutes(20), LocalDateTime.of(2025, 1, 1, 10, 0)));
 
-        assertNotEquals(givenTask, generatedTask, "Id должны различаться");
-        assertEquals(givenTask, taskManager.getTaskById(3));
-        assertEquals(generatedTask, taskManager.getTaskById(generatedTask.getId()));
+        assertNotEquals(savedGiven.getId(), generatedTask.getId(), "Id должны различаться");
+
+        assertThrows(NotFoundException.class, () -> taskManager.getTaskById(3));
     }
 
     @Test
@@ -103,7 +106,9 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         taskManager.deleteTaskById(task.getId());
 
-        assertNull(taskManager.getTaskById(task.getId()));
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getTaskById(task.getId()),
+                "После удаления getTaskById должен кидать NotFoundException");
     }
 
     @Test
@@ -114,8 +119,13 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         taskManager.deleteEpicById(epic.getId());
 
-        assertNull(taskManager.getEpicById(epic.getId()), "Эпик не был удален");
-        assertNull(taskManager.getSubtaskById(subtask.getId()), "Подзадача не была удалена");
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getEpicById(epic.getId()),
+                "После удаления getEpicById должен кидать NotFoundException");
+
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getSubtaskById(subtask.getId()),
+                "Подзадачи эпика должны удаляться");
     }
 
     @Test
